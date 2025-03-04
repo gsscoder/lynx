@@ -31,7 +31,7 @@ public class AudioCaptureModule : IModule
     public Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (_started != 0) {
-            throw new InvalidOperationException($"{Name} module already started.");
+            throw new InvalidOperationException($"{Name} module already started");
         }
 
         _logger.LogInformation("Starting audio capture");
