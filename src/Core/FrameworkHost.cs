@@ -15,6 +15,14 @@ public sealed class FrameworkHost : IAsyncDisposable
 
     public void RegisterModule<T>() where T : IModule => _modules.Add(_services.GetRequiredService<T>());
 
+    public void RegisterModule(Type moduleType)
+    {
+        if (!moduleType.GetInterfaces().Any(x => x == typeof(IModule)))
+            throw new ArgumentException($"A module must implement {nameof(IModule)} interface,", nameof(moduleType));
+
+        _modules.Add((IModule)_services.GetRequiredService(moduleType));
+    }
+
     public async Task StartAsync()
     {
         _cts = new CancellationTokenSource();
