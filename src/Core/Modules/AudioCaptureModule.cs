@@ -1,9 +1,9 @@
-﻿using Core.Messages;
+﻿using Lynx.Core.Messages;
 using Microsoft.Extensions.Logging;
 using NAudio.Wave;
 using SlimMessageBus;
 
-namespace Core.Modules;
+namespace Lynx.Core.Modules;
 
 public class AudioCaptureModule : IModule
 {

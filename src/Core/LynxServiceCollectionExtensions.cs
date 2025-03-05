@@ -1,7 +1,6 @@
-﻿using Core.Messages;
-using Core.Modules;
-using Lynx.Core;
-using SlimMessageBus;
+﻿using Lynx.Core;
+using Lynx.Core.Messages;
+using Lynx.Core.Modules;
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
 
@@ -15,7 +14,7 @@ public static class LynxServiceCollectionExtensions
         {
             mbb.WithProviderMemory();
             mbb.Produce<AudioChunkMessage>(x => x.DefaultTopic("audio-chunks"));
-            //mbb.Produce<TextMessage>(x => x.DefaultTopic("text-messages"));
+            mbb.Produce<TextMessage>(x => x.DefaultTopic("text-messages"));
             //mbb.Consume<AudioChunkMessage>(x => x.WithConsumer<SpeechToTextModule>());
             //mbb.Consume<TextMessage>(x => x.WithConsumer<TextConsumerModule>());
         });

@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>13</LangVersion>
     <AssemblyName>Lynx.Core</AssemblyName>
-    <RootNamespace>Core</RootNamespace>
+    <RootNamespace>Lynx.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,11 +1,10 @@
-﻿using Core.Messages;
-using Core;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using SlimMessageBus;
 using Whisper.net;
 using Microsoft.Extensions.Logging;
+using Lynx.Core.Messages;
 
-namespace Core.Modules;
+namespace Lynx.Core.Modules;
 
 public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
 {

@@ -1,4 +1,4 @@
-﻿namespace Core;
+﻿namespace Lynx.Core;
 
 public interface IModule : IAsyncDisposable
 {
