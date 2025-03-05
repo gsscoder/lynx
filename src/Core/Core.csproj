@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="SharpX" Version="8.3.0" />
     <PackageReference Include="SlimMessageBus" Version="3.0.0" />
     <PackageReference Include="SlimMessageBus.Host" Version="3.0.2" />
     <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.0.2" />
