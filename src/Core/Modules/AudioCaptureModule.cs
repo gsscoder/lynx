@@ -22,7 +22,7 @@ public class AudioCaptureModule : IModule
         _waveIn = new WaveInEvent
         {
             WaveFormat = new WaveFormat(16000, 1), // 16kHz, mono
-            BufferMilliseconds = 100
+            BufferMilliseconds = 300
         };
         _waveIn.DataAvailable += async (s, e) => await PublishAudioAsync(e);
         _started = 0;
