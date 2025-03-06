@@ -35,7 +35,7 @@ public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
         _processor.Dispose();
     }
 
-    public async Task OnHandle(AudioChunkMessage message)
+    public async Task OnHandle(AudioChunkMessage message, CancellationToken cancellationToken)
     {
         var waveBuffer = new WaveBuffer(message.AudioData);
         var samples = new float[message.BytesRecorded / 2];
@@ -60,10 +60,5 @@ public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
                 }
             }
         }
-    }
-
-    public Task OnHandle(AudioChunkMessage message, CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 }
