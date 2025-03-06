@@ -22,8 +22,12 @@ var host = Host.CreateDefaultBuilder(args)
             mbb.WithProviderMemory();
             mbb.Produce<AudioChunkMessage>(x => x.DefaultTopic("audio-chunks"));
             mbb.Produce<TextMessage>(x => x.DefaultTopic("text-messages"));
-            mbb.Consume<AudioChunkMessage>(x => x.WithConsumer<SpeechToTextModule>());
-            //mbb.Consume<TextMessage>(x => x.WithConsumer<TextConsumerModule>());
+            mbb.Consume<AudioChunkMessage>(x => x
+                .Topic("audio-chunks")
+                .WithConsumer<SpeechToTextModule>());
+            //mbb.Consume<TextMessage>(x => x
+            //    .Topic("text-messages")
+            //    .WithConsumer<TextConsumerModule>());
         });
 
         services.AddSingleton<AudioCaptureModule>();
