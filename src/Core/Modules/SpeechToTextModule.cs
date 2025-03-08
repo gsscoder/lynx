@@ -7,7 +7,7 @@ using Whisper.net;
 using Microsoft.Extensions.Options;
 using Lynx.Core.Configuration;
 
-public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
+public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
 {
     private readonly ILogger<SpeechToTextModule> _logger;
     private readonly AudioSpeechSettings _settings;
@@ -44,13 +44,10 @@ public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
         }
 
         _audioBuffer.AddRange(samples);
-        //_logger.LogInformation("Buffered {Count} samples, Total: {Total}", samples.Length, _audioBuffer.Count);
 
         if (_audioBuffer.Count >= MinSamples) {
             float[] bufferedSamples = _audioBuffer.ToArray();
             _audioBuffer.Clear();
-
-            //_logger.LogInformation("Processing {Count} samples, Max: {Max}", bufferedSamples.Length, bufferedSamples.Max());
 
             await foreach (var segment in _processor.ProcessAsync(bufferedSamples)) {
                 string text = segment.Text.Trim().ToLowerInvariant();

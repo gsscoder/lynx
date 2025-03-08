@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace Lynx.Core.Modules;
 
-public class AudioCaptureModule : IModule
+public sealed class AudioCaptureModule : IModule
 {
     private readonly ILogger _logger;
     private readonly IMessageBus _bus;

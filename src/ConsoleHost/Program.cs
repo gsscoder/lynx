@@ -1,14 +1,12 @@
 ﻿using Lynx.Core;
+using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Modules;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus.Host;
-using SlimMessageBus;
 using SlimMessageBus.Host.Memory;
-using Lynx.Core.Configuration;
-using Microsoft.Extensions.Options;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
@@ -27,9 +25,9 @@ var host = Host.CreateDefaultBuilder(args)
             mbb.Consume<AudioChunkMessage>(x => x
                 .Topic("audio-chunks")
                 .WithConsumer<SpeechToTextModule>());
-            //mbb.Consume<TextMessage>(x => x
-            //    .Topic("text-messages")
-            //    .WithConsumer<TextConsumerModule>());
+            mbb.Consume<TextMessage>(x => x
+                .Topic("text-messages")
+                .WithConsumer<TextConsumerModule>());
         });
 
 
@@ -38,14 +36,14 @@ var host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton<AudioCaptureModule>();
         services.AddSingleton<SpeechToTextModule>();
-        //services.AddSingleton<TextConsumerModule>();
+        services.AddSingleton<TextConsumerModule>();
 
         services.AddSingleton<FrameworkHost>(sp =>
         {
             var host = new FrameworkHost(sp);
             host.RegisterModule<AudioCaptureModule>();
             host.RegisterModule<SpeechToTextModule>();
-            //host.RegisterModule<TextConsumerModule>();
+            host.RegisterModule<TextConsumerModule>();
             return host;
         });
     })
@@ -54,7 +52,7 @@ var host = Host.CreateDefaultBuilder(args)
 var framework = host.Services.GetRequiredService<FrameworkHost>();
 await framework.StartAsync();
 
-Console.WriteLine("Press Enter to stop...");
+//Console.WriteLine("Press Enter to stop...");
 Console.ReadLine();
 
 await framework.DisposeAsync();
