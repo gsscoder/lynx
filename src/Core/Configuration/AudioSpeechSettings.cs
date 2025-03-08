@@ -15,7 +15,4 @@ public sealed class AudioSpeechSettings
         
     [Required(ErrorMessage = $"{nameof(ListenStartTrigger)} setting is mandatory")]
     public required string ListenStartTrigger { get; set; }
-
-    [Required(ErrorMessage = $"{nameof(ListenEndTrigger)} setting is mandatory")]
-    public required string ListenEndTrigger { get; set; }
 }

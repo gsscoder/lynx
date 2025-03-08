@@ -6,6 +6,8 @@ using SlimMessageBus;
 using Whisper.net;
 using Microsoft.Extensions.Options;
 using Lynx.Core.Configuration;
+using SharpX.Extensions;
+using Lynx.Core.Utilities;
 
 public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
 {
@@ -39,31 +41,35 @@ public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
         var waveBuffer = new WaveBuffer(message.AudioData);
         var samples = new float[message.BytesRecorded / 2];
         for (int i = 0; i < samples.Length; i++) {
-            float sample = waveBuffer.ShortBuffer[i] / 32768f; // [-1, 1]
+            var sample = waveBuffer.ShortBuffer[i] / 32768f; // [-1, 1]
             samples[i] = Math.Clamp(sample * 10f, -1f, 1f); // Amplify but clamp
         }
 
         _audioBuffer.AddRange(samples);
 
         if (_audioBuffer.Count >= MinSamples) {
-            float[] bufferedSamples = _audioBuffer.ToArray();
+            var bufferedSamples = _audioBuffer.ToArray();
             _audioBuffer.Clear();
 
             await foreach (var segment in _processor.ProcessAsync(bufferedSamples)) {
-                string text = segment.Text.Trim().ToLowerInvariant();
+                var text = segment.Text.Trim().ToLowerInvariant();
+                var firstText = String.Empty;
                 _logger.LogInformation("Heard: {Text}", text);
 
                 if (!_isListening) {
                     if (text.Contains(_settings.ListenStartTrigger)) {
                         _isListening = true;
-                        _logger.LogInformation("Listening started");
+                        firstText = SimilarStringFinder.ReplaceSimilar(text,
+                            _settings.ListenStartTrigger, String.Empty).Trim();
+                        _logger.LogInformation(">> Listening started");
                     }
                 }
                 else {
-                    await _bus.Publish(new TextMessage { Text = text });
-                    if (string.IsNullOrWhiteSpace(text) || text.Contains(_settings.ListenEndTrigger)) {
+                    var seperator = firstText.IsEmpty() ? String.Empty : " ";
+                    await _bus.Publish(new TextMessage { Text = $"{firstText}{seperator}{text.Trim()}" });
+                    if (text.IsEmpty() || text == "[blank_audio]") {
                         _isListening = false;
-                        _logger.LogInformation("Listening stopped");
+                        _logger.LogInformation(">> Listening stopped");
                     }
                 }
             }
