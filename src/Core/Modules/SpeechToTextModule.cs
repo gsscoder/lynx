@@ -4,23 +4,29 @@ using Microsoft.Extensions.Logging;
 using NAudio.Wave;
 using SlimMessageBus;
 using Whisper.net;
+using Microsoft.Extensions.Options;
+using Lynx.Core.Configuration;
 
 public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
 {
+    private readonly ILogger<SpeechToTextModule> _logger;
+    private readonly AudioSpeechSettings _settings;
     private readonly IMessageBus _bus;
     private readonly WhisperProcessor _processor;
-    private readonly ILogger<SpeechToTextModule> _logger;
-    private bool _isRecording = false;
+    private bool _isListening = false;
     private readonly List<float> _audioBuffer = new();
     private const int MinSamples = 80000; // 5s * 16kHz
 
     public string Name => "SpeechToText";
 
-    public SpeechToTextModule(ILogger<SpeechToTextModule> logger, IMessageBus bus, string modelPath)
+    public SpeechToTextModule(ILogger<SpeechToTextModule> logger,
+        IOptions<AudioSpeechSettings> options,
+        IMessageBus bus)
     {
-        _bus = bus;
         _logger = logger;
-        var factory = WhisperFactory.FromPath(modelPath);
+        _settings = options.Value;
+        _bus = bus;
+        var factory = WhisperFactory.FromPath(_settings.ModelPath);
         _processor = factory.CreateBuilder().WithLanguage("en").Build();
     }
 
@@ -50,17 +56,17 @@ public class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
                 string text = segment.Text.Trim().ToLowerInvariant();
                 _logger.LogInformation("Heard: {Text}", text);
 
-                if (!_isRecording) {
-                    if (text.Contains("system")) {
-                        _isRecording = true;
-                        _logger.LogInformation("Trigger detected. Recording");
+                if (!_isListening) {
+                    if (text.Contains(_settings.ListenStartTrigger)) {
+                        _isListening = true;
+                        _logger.LogInformation("Listening started");
                     }
                 }
                 else {
                     await _bus.Publish(new TextMessage { Text = text });
-                    if (string.IsNullOrWhiteSpace(text) || text.Contains("stop system")) {
-                        _isRecording = false;
-                        _logger.LogInformation("Stopped recording");
+                    if (string.IsNullOrWhiteSpace(text) || text.Contains(_settings.ListenEndTrigger)) {
+                        _isListening = false;
+                        _logger.LogInformation("Listening stopped");
                     }
                 }
             }

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using SlimMessageBus.Host;
 using SlimMessageBus;
 using SlimMessageBus.Host.Memory;
+using Lynx.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
@@ -15,7 +17,7 @@ var host = Host.CreateDefaultBuilder(args)
         logging.AddConsole();
         logging.SetMinimumLevel(LogLevel.Information);
     })
-    .ConfigureServices(services =>
+    .ConfigureServices((context, services) =>
     {
         services.AddSlimMessageBus(mbb =>
         {
@@ -30,10 +32,12 @@ var host = Host.CreateDefaultBuilder(args)
             //    .WithConsumer<TextConsumerModule>());
         });
 
+
+        services.AddOptions<AudioSpeechSettings>()
+            .Bind(context.Configuration.GetSection(AudioSpeechSettings.SectionKey));
+
         services.AddSingleton<AudioCaptureModule>();
-        services.AddSingleton<SpeechToTextModule>(sp =>
-            new SpeechToTextModule(sp.GetRequiredService<ILogger<SpeechToTextModule>>(),
-                sp.GetRequiredService<IMessageBus>(), "ggml-base.bin"));
+        services.AddSingleton<SpeechToTextModule>();
         //services.AddSingleton<TextConsumerModule>();
 
         services.AddSingleton<FrameworkHost>(sp =>

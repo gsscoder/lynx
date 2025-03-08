@@ -1,5 +1,7 @@
-﻿using Lynx.Core.Messages;
+﻿using Lynx.Core.Configuration;
+using Lynx.Core.Messages;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NAudio.Wave;
 using SlimMessageBus;
 
@@ -15,14 +17,16 @@ public class AudioCaptureModule : IModule
 
     public string Name => "AudioCapture";
 
-    public AudioCaptureModule(ILogger<AudioCaptureModule> logger, IMessageBus bus)
+    public AudioCaptureModule(ILogger<AudioCaptureModule> logger,
+        IOptions<AudioSpeechSettings> options,
+        IMessageBus bus)
     {
         _logger = logger;
         _bus = bus;
         _waveIn = new WaveInEvent
         {
             WaveFormat = new WaveFormat(16000, 1), // 16kHz, mono
-            BufferMilliseconds = 300
+            BufferMilliseconds = options.Value.BufferMs,
         };
         _waveIn.DataAvailable += async (s, e) => await PublishAudioAsync(e);
         _started = 0;
