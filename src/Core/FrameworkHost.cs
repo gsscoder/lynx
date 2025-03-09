@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Lynx.Core.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+using SharpX.Extensions;
 
 namespace Lynx.Core;
 
-public sealed class FrameworkHost : IAsyncDisposable
+public sealed class FrameworkHost : IModuleHost, IAsyncDisposable
 {
     private readonly IServiceProvider _services;
     private readonly List<Module> _modules = new();
@@ -19,6 +21,16 @@ public sealed class FrameworkHost : IAsyncDisposable
         var module = _services.GetRequiredService<T>();
         module.Initialize(this);
         _modules.Add(module);
+    }
+
+    public T GetModule<T>(string name) where T : Module
+    {
+        var module = _modules.SingleOrDefault(m => m.Name.EqualsIgnoreCase(name));
+        if (module == null) {
+            throw new InvalidOperationException($"Module {name} is not found.");
+        }
+
+        return (T)module;
     }
 
     public async Task StartAsync()

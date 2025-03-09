@@ -1,4 +1,6 @@
-﻿namespace Lynx.Core;
+﻿using Lynx.Core.Abstractions;
+
+namespace Lynx.Core;
 
 public abstract class Module : IAsyncDisposable
 {
@@ -6,9 +8,9 @@ public abstract class Module : IAsyncDisposable
     public abstract string Name { get; }
     public abstract bool IsStartable { get; }
 
-    protected FrameworkHost? Host { get; private set; }
+    protected IModuleHost? Host { get; private set; }
     
-    public void Initialize(FrameworkHost host)
+    public void Initialize(IModuleHost host)
     {
         if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 0) {
             Host = host;
