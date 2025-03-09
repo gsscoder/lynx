@@ -30,6 +30,7 @@ var host = Host.CreateDefaultBuilder(args)
                 .WithConsumer<TextConsumerModule>());
         });
 
+        services.AddSingleton<FrameworkHost>();
 
         services.AddOptions<AudioSpeechSettings>()
             .Bind(context.Configuration.GetSection(AudioSpeechSettings.SectionKey));
@@ -37,22 +38,15 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<AudioCaptureModule>();
         services.AddSingleton<SpeechToTextModule>();
         services.AddSingleton<TextConsumerModule>();
-
-        services.AddSingleton<FrameworkHost>(sp =>
-        {
-            var host = new FrameworkHost(sp);
-            host.RegisterModule<AudioCaptureModule>();
-            host.RegisterModule<SpeechToTextModule>();
-            host.RegisterModule<TextConsumerModule>();
-            return host;
-        });
     })
     .Build();
 
 var framework = host.Services.GetRequiredService<FrameworkHost>();
+framework.RegisterModule<AudioCaptureModule>();
+framework.RegisterModule<SpeechToTextModule>();
+framework.RegisterModule<TextConsumerModule>();
 await framework.StartAsync();
 
-//Console.WriteLine("Press Enter to stop...");
 Console.ReadLine();
 
 await framework.DisposeAsync();

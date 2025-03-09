@@ -5,28 +5,26 @@ namespace Lynx.Core;
 public sealed class FrameworkHost : IAsyncDisposable
 {
     private readonly IServiceProvider _services;
-    private readonly List<IModule> _modules = new();
+    private readonly List<Module> _modules = new();
     private CancellationTokenSource? _cts;
 
     public FrameworkHost(IServiceProvider services)
     {
         _services = services;
+
     }
 
-    public void RegisterModule<T>() where T : IModule => _modules.Add(_services.GetRequiredService<T>());
-
-    public void RegisterModule(Type moduleType)
+    public void RegisterModule<T>() where T : Module
     {
-        if (!moduleType.GetInterfaces().Any(x => x == typeof(IModule)))
-            throw new ArgumentException($"A module must implement {nameof(IModule)} interface,", nameof(moduleType));
-
-        _modules.Add((IModule)_services.GetRequiredService(moduleType));
+        var module = _services.GetRequiredService<T>();
+        module.Initialize(this);
+        _modules.Add(module);
     }
 
     public async Task StartAsync()
     {
         _cts = new CancellationTokenSource();
-        foreach (var module in _modules)
+        foreach (var module in _modules.Where(m => m.IsStartable))
             await module.StartAsync(_cts.Token);
     }
 

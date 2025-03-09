@@ -9,7 +9,7 @@ using Lynx.Core.Configuration;
 using SharpX.Extensions;
 using Lynx.Core.Utilities;
 
-public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
+public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 {
     private readonly ILogger<SpeechToTextModule> _logger;
     private readonly AudioSpeechSettings _settings;
@@ -19,7 +19,8 @@ public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
     private readonly List<float> _audioBuffer = new();
     private const int MinSamples = 80000; // 5s * 16kHz
 
-    public string Name => "SpeechToText";
+    public override string Name => "SpeechToText";
+    public override bool IsStartable => true;
 
     public SpeechToTextModule(ILogger<SpeechToTextModule> logger,
         IOptions<AudioSpeechSettings> options,
@@ -32,9 +33,9 @@ public sealed class SpeechToTextModule : IModule, IConsumer<AudioChunkMessage>
         _processor = factory.CreateBuilder().WithLanguage("en").Build();
     }
 
-    public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-    public Task StopAsync() => Task.CompletedTask;
-    public ValueTask DisposeAsync() { _processor.Dispose(); return ValueTask.CompletedTask; }
+    public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public override Task StopAsync() => Task.CompletedTask;
+    public override ValueTask DisposeAsync() { _processor.Dispose(); return ValueTask.CompletedTask; }
 
     public async Task OnHandle(AudioChunkMessage message, CancellationToken cancellationToken)
     {

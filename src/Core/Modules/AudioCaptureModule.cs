@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace Lynx.Core.Modules;
 
-public sealed class AudioCaptureModule : IModule
+public sealed class AudioCaptureModule : Module
 {
     private readonly ILogger _logger;
     private readonly IMessageBus _bus;
@@ -15,7 +15,8 @@ public sealed class AudioCaptureModule : IModule
     private CancellationTokenSource? _cts;
     private int _started;
 
-    public string Name => "AudioCapture";
+    public override string Name => "AudioCapture";
+    public override bool IsStartable => true; 
 
     public AudioCaptureModule(ILogger<AudioCaptureModule> logger,
         IOptions<AudioSpeechSettings> options,
@@ -32,7 +33,7 @@ public sealed class AudioCaptureModule : IModule
         _started = 0;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken = default)
+    public override Task StartAsync(CancellationToken cancellationToken = default)
     {
         if (_started != 0) {
             throw new InvalidOperationException($"{Name} module already started");
@@ -47,7 +48,7 @@ public sealed class AudioCaptureModule : IModule
         return Task.CompletedTask;
     }
 
-    public Task StopAsync()
+    public override Task StopAsync()
     {
         _logger.LogInformation("Stopping audio capture");
  
@@ -58,7 +59,7 @@ public sealed class AudioCaptureModule : IModule
         return Task.CompletedTask;
     }
 
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         try {
             await StopAsync();
