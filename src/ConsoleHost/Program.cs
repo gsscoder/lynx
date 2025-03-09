@@ -2,6 +2,7 @@
 using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Modules;
+using Lynx.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,14 +31,15 @@ var host = Host.CreateDefaultBuilder(args)
                 .WithConsumer<TextConsumerModule>());
         });
 
-        services.AddSingleton<FrameworkHost>();
-
         services.AddOptions<AudioSpeechSettings>()
             .Bind(context.Configuration.GetSection(AudioSpeechSettings.SectionKey));
+        services.AddSingleton<AudioCaptureModule>()
+                .AddSingleton<SpeechToTextModule>()
+                .AddSingleton<TextConsumerModule>();
 
-        services.AddSingleton<AudioCaptureModule>();
-        services.AddSingleton<SpeechToTextModule>();
-        services.AddSingleton<TextConsumerModule>();
+        services.AddSingleton<ISimilarStringFinder, SimilarStringFinder>();
+
+        services.AddSingleton<FrameworkHost>();
     })
     .Build();
 

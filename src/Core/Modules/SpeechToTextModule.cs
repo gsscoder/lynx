@@ -1,18 +1,21 @@
-﻿using Lynx.Core.Messages;
-using Lynx.Core;
+﻿using Lynx.Core;
+using Lynx.Core.Configuration;
+using Lynx.Core.Messages;
+using Lynx.Core.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NAudio.Wave;
+using SharpX.Extensions;
 using SlimMessageBus;
 using Whisper.net;
-using Microsoft.Extensions.Options;
-using Lynx.Core.Configuration;
-using SharpX.Extensions;
-using Lynx.Core.Utilities;
+
+namespace Lynx.Core.Modules;
 
 public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 {
     private readonly ILogger<SpeechToTextModule> _logger;
     private readonly AudioSpeechSettings _settings;
+    private readonly ISimilarStringFinder _similarStringFinder;
     private readonly IMessageBus _bus;
     private readonly WhisperProcessor _processor;
     private bool _isListening = false;
@@ -24,11 +27,13 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 
     public SpeechToTextModule(ILogger<SpeechToTextModule> logger,
         IOptions<AudioSpeechSettings> options,
-        IMessageBus bus)
+        IMessageBus bus,
+        ISimilarStringFinder similarStringFinder)
     {
         _logger = logger;
         _settings = options.Value;
         _bus = bus;
+        _similarStringFinder = similarStringFinder;
         var factory = WhisperFactory.FromPath(_settings.ModelPath);
         _processor = factory.CreateBuilder().WithLanguage("en").Build();
     }
@@ -60,7 +65,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                 if (!_isListening) {
                     if (text.Contains(_settings.ListenStartTrigger)) {
                         _isListening = true;
-                        firstText = SimilarStringFinder.ReplaceSimilar(text,
+                        firstText = _similarStringFinder.ReplaceSimilar(text,
                             _settings.ListenStartTrigger, String.Empty).Trim();
                         _logger.LogInformation(">> Listening started");
                     }
