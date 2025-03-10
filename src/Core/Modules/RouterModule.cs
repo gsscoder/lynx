@@ -4,12 +4,12 @@ using SlimMessageBus;
 
 namespace Lynx.Core.Modules;
 
-public class TextConsumerModule(ILogger<TextConsumerModule> logger)
+public class RouterModule(ILogger<RouterModule> logger)
     : Module, IConsumer<TextMessage>
 {
     private readonly ILogger _logger = logger;
 
-    public override string Name => "TextConsumer";
+    public override string Name => "Router";
     public override bool IsStartable => true;
 
     public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
