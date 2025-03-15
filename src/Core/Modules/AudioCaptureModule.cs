@@ -16,7 +16,7 @@ public sealed class AudioCaptureModule : Module
     private int _started;
 
     public override string Name => "AudioCapture";
-    public override bool IsStartable => true; 
+    public override bool AutoStart => true; 
 
     public AudioCaptureModule(ILogger<AudioCaptureModule> logger,
         IOptions<AudioSpeechSettings> options,

@@ -28,14 +28,18 @@ var host = Host.CreateDefaultBuilder(args)
                 .WithConsumer<SpeechToTextModule>());
             mbb.Consume<TextMessage>(x => x
                 .Topic("text-messages")
-                .WithConsumer<TextConsumerModule>());
+                .WithConsumer<RouterModule>());
         });
 
         services.AddOptions<AudioSpeechSettings>()
             .Bind(context.Configuration.GetSection(AudioSpeechSettings.SectionKey));
+        services.AddOptions<RouterSettings>()
+            .Bind(context.Configuration.GetSection(RouterSettings.SectionKey));
+
         services.AddSingleton<AudioCaptureModule>()
                 .AddSingleton<SpeechToTextModule>()
-                .AddSingleton<TextConsumerModule>();
+                .AddSingleton<RouterModule>()
+                .AddSingleton<SystemInfoModule>();
 
         services.AddSingleton<ISimilarStringFinder, SimilarStringFinder>();
 
@@ -46,7 +50,8 @@ var host = Host.CreateDefaultBuilder(args)
 var framework = host.Services.GetRequiredService<FrameworkHost>();
 framework.RegisterModule<AudioCaptureModule>();
 framework.RegisterModule<SpeechToTextModule>();
-framework.RegisterModule<TextConsumerModule>();
+framework.RegisterModule<RouterModule>();
+framework.RegisterModule<SystemInfoModule>();
 await framework.StartAsync();
 
 Console.ReadLine();

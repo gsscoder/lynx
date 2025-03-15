@@ -4,5 +4,5 @@ public interface IModuleHost
 {
     void RegisterModule<T>() where T : Module;
 
-    T GetModule<T>(string name) where T : Module;
+    Module GetModule(string name);
 }

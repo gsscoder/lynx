@@ -15,7 +15,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 {
     private readonly ILogger<SpeechToTextModule> _logger;
     private readonly AudioSpeechSettings _settings;
-    private readonly ISimilarStringFinder _similarStringFinder;
+    private readonly ISimilarStringFinder _simStrFinder;
     private readonly IMessageBus _bus;
     private readonly WhisperProcessor _processor;
     private bool _isListening = false;
@@ -23,17 +23,17 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
     private const int MinSamples = 80000; // 5s * 16kHz
 
     public override string Name => "SpeechToText";
-    public override bool IsStartable => true;
+    public override bool AutoStart => true;
 
     public SpeechToTextModule(ILogger<SpeechToTextModule> logger,
         IOptions<AudioSpeechSettings> options,
         IMessageBus bus,
-        ISimilarStringFinder similarStringFinder)
+        ISimilarStringFinder simStringFinder)
     {
         _logger = logger;
         _settings = options.Value;
         _bus = bus;
-        _similarStringFinder = similarStringFinder;
+        _simStrFinder = simStringFinder;
         var factory = WhisperFactory.FromPath(_settings.ModelPath);
         _processor = factory.CreateBuilder().WithLanguage("en").Build();
     }
@@ -65,7 +65,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                 if (!_isListening) {
                     if (text.Contains(_settings.ListenStartTrigger)) {
                         _isListening = true;
-                        firstText = _similarStringFinder.ReplaceSimilar(text,
+                        firstText = _simStrFinder.ReplaceSimilar(text,
                             _settings.ListenStartTrigger, String.Empty).Trim();
                         _logger.LogInformation(">> Listening started");
                     }

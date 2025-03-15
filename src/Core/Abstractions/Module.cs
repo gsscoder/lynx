@@ -6,7 +6,7 @@ public abstract class Module : IAsyncDisposable
 {
     private uint _initialized = 0u;
     public abstract string Name { get; }
-    public abstract bool IsStartable { get; }
+    public abstract bool AutoStart { get; }
 
     protected IModuleHost? Host { get; private set; }
     
