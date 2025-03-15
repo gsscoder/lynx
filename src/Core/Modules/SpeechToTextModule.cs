@@ -2,6 +2,7 @@
 using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
+using Lynx.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NAudio.Wave;
@@ -71,11 +72,13 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                     }
                 }
                 else {
-                    var seperator = firstText.IsEmpty() ? String.Empty : " ";
-                    await _bus.Publish(new TextMessage { Text = $"{firstText}{seperator}{text.Trim()}" });
-                    if (text.IsEmpty() || text == "[blank_audio]") {
+                    if (AudioUtility.IsBlank(text)) {
                         _isListening = false;
                         _logger.LogInformation(">> Listening stopped");
+                        await _bus.Publish(new TextMessage { Text = firstText });
+                    }
+                    else {
+                        await _bus.Publish(new TextMessage { Text = $"{firstText} {text.Trim()}" });
                     }
                 }
             }

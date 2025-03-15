@@ -2,6 +2,7 @@
 using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
+using Lynx.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
@@ -34,6 +35,8 @@ public class RouterModule : Module, IConsumer<TextMessage>
     public async Task OnHandle(TextMessage message, CancellationToken cancellationToken)
     {
         _logger.LogInformation($"Text: {message.Text}");
+
+        if (AudioUtility.IsBlank(message.Text)) return;
 
         foreach (var binding in _bindings) {
             if (_simStrFinder.FindSimilar(binding.Item1, message.Text).Any()) {
