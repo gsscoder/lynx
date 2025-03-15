@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using NAudio.Wave;
 using SharpX.Extensions;
 using SlimMessageBus;
+using System.Text;
 using Whisper.net;
 
 namespace Lynx.Core.Modules;
@@ -20,8 +21,9 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
     private readonly IMessageBus _bus;
     private readonly WhisperProcessor _processor;
     private bool _isListening = false;
-    private readonly List<float> _audioBuffer = new();
-    private const int MinSamples = 80000; // 5s * 16kHz
+    private readonly List<float> _audioBuffer = [];
+    private int _silence = 0;
+    private readonly List<string> texts = [];
 
     public override string Name => "SpeechToText";
     public override bool AutoStart => true;
@@ -54,7 +56,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 
         _audioBuffer.AddRange(samples);
 
-        if (_audioBuffer.Count >= MinSamples) {
+        if (_audioBuffer.Count >= _settings.MinSamples) {
             var bufferedSamples = _audioBuffer.ToArray();
             _audioBuffer.Clear();
 
@@ -63,22 +65,36 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                 var firstText = String.Empty;
                 _logger.LogInformation("Heard: {Text}", text);
 
+                var blank = AudioUtility.IsBlank(text);
                 if (!_isListening) {
+                    if (blank) {
+                        continue;
+                    }
                     if (text.Contains(_settings.ListenStartTrigger)) {
                         _isListening = true;
                         firstText = _simStrFinder.ReplaceSimilar(text,
                             _settings.ListenStartTrigger, String.Empty).Trim();
+                        firstText = firstText.RemoveDiacritics();
+                        if (firstText.Length > 0) {
+                            texts.Add(firstText);
+                        }
                         _logger.LogInformation(">> Listening started");
                     }
                 }
                 else {
-                    if (AudioUtility.IsBlank(text)) {
-                        _isListening = false;
-                        _logger.LogInformation(">> Listening stopped");
-                        await _bus.Publish(new TextMessage { Text = firstText });
+                    if (blank) {
+                        _silence++;
                     }
                     else {
-                        await _bus.Publish(new TextMessage { Text = $"{firstText} {text.Trim()}" });
+                        texts.Add(text);
+                    }
+                    if (_silence > _settings.SilenceThreshold) {
+                        _isListening = false;
+                        _silence = 0;
+                        _logger.LogInformation(">> Listening stopped");
+                    }
+                    if (!_isListening) {
+                        await _bus.Publish(new TextMessage { Text = String.Join(" ", texts) });
                     }
                 }
             }

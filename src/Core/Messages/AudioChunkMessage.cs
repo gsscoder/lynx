@@ -2,8 +2,8 @@
 
 public class AudioChunkMessage
 {
-    public byte[] AudioData { get; set; }
+    public required byte[] AudioData { get; init; }
 
-    public int BytesRecorded { get; set; }
+    public required int BytesRecorded { get; init; }
 }
 
