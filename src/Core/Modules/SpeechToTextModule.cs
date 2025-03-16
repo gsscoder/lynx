@@ -38,7 +38,10 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
         _bus = bus;
         _simStrFinder = simStringFinder;
         var factory = WhisperFactory.FromPath(_settings.ModelPath);
-        _processor = factory.CreateBuilder().WithLanguage("en").Build();
+        _processor = factory.CreateBuilder()
+            .WithLanguage("en")
+            .WithProbabilities()
+            .Build();
     }
 
     public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -51,7 +54,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
         var samples = new float[message.BytesRecorded / 2];
         for (int i = 0; i < samples.Length; i++) {
             var sample = waveBuffer.ShortBuffer[i] / 32768f; // [-1, 1]
-            samples[i] = Math.Clamp(sample * 10f, -1f, 1f); // Amplify but clamp
+            samples[i] = Math.Clamp(sample * 5f, -1f, 1f); // Amplify but clamp
         }
 
         _audioBuffer.AddRange(samples);
@@ -62,8 +65,12 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
 
             await foreach (var segment in _processor.ProcessAsync(bufferedSamples)) {
                 var text = segment.Text.Trim().ToLowerInvariant();
-                var firstText = String.Empty;
                 _logger.LogInformation("Heard: {Text}", text);
+
+                if (segment.Probability < 0.7) { // Filter low-confidence transcriptions
+                    _logger.LogDebug("Low confidence, skipping: {Text}", text);
+                    continue;
+                }
 
                 var blank = AudioUtility.IsBlank(text);
                 if (!_isListening) {
@@ -72,7 +79,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                     }
                     if (text.Contains(_settings.ListenStartTrigger)) {
                         _isListening = true;
-                        firstText = _simStrFinder.ReplaceSimilar(text,
+                        var firstText = _simStrFinder.ReplaceSimilar(text,
                             _settings.ListenStartTrigger, String.Empty).Trim();
                         firstText = firstText.RemoveDiacritics();
                         if (firstText.Length > 0) {
@@ -86,7 +93,14 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                         _silence++;
                     }
                     else {
-                        texts.Add(text);
+                        // Avoid processing a repeated trigger command
+                        var inputText = _simStrFinder.ReplaceSimilar(text,
+                            _settings.ListenStartTrigger, String.Empty).Trim();
+                        inputText = inputText.RemoveDiacritics();
+                        if (inputText.Length > 0) {
+                            texts.Add(inputText);
+                        }
+                        continue;
                     }
                     if (_silence > _settings.SilenceThreshold) {
                         _isListening = false;
@@ -95,6 +109,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                     }
                     if (!_isListening) {
                         await _bus.Publish(new TextMessage { Text = String.Join(" ", texts) });
+                        texts.Clear();
                     }
                 }
             }
