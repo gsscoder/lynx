@@ -1,8 +1,7 @@
-﻿using F23.StringSimilarity.Interfaces;
-using Lynx.Core.Configuration;
+﻿using Lynx.Core.Configuration;
+using Lynx.Core.Infastructure;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
-using Lynx.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
@@ -17,7 +16,6 @@ public class RouterModule : Module, IConsumer<TextMessage>
 
     public RouterModule(ILogger<RouterModule> logger,
         IOptions<RouterSettings> settings,
-        IMessageBus bus,
         ISimilarStringFinder simStrFinder)
     {
         _logger = logger;

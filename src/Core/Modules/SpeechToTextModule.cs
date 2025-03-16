@@ -1,14 +1,12 @@
-﻿using Lynx.Core;
-using Lynx.Core.Configuration;
+﻿using Lynx.Core.Configuration;
+using Lynx.Core.Infastructure;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
-using Lynx.Core.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NAudio.Wave;
 using SharpX.Extensions;
 using SlimMessageBus;
-using System.Text;
 using Whisper.net;
 
 namespace Lynx.Core.Modules;

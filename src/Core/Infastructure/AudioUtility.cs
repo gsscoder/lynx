@@ -1,6 +1,6 @@
 ﻿using SharpX.Extensions;
 
-namespace Lynx.Core.Utilities;
+namespace Lynx.Core.Infastructure;
 
 public static class AudioUtility
 {
