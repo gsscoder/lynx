@@ -10,10 +10,18 @@ public sealed class FrameworkHost : IModuleHost, IAsyncDisposable
     private readonly List<Module> _modules = new();
     private CancellationTokenSource? _cts;
 
-    public FrameworkHost(IServiceProvider services)
+    public FrameworkHost(IServiceProvider services, IEnumerable<Type> moduleTypes)
     {
         _services = services;
+        foreach (var type in moduleTypes)
+            RegisterModule(type);
+    }
 
+    public void RegisterModule(Type moduleType)
+    {
+        var module = (Module)_services.GetRequiredService(moduleType);
+        module.Initialize(this);
+        _modules.Add(module);
     }
 
     public void RegisterModule<T>() where T : Module

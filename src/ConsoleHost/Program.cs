@@ -1,13 +1,7 @@
 ﻿using Lynx.Core;
-using Lynx.Core.Configuration;
-using Lynx.Core.Messages;
-using Lynx.Core.Modules;
-using Lynx.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using SlimMessageBus.Host;
-using SlimMessageBus.Host.Memory;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
@@ -18,40 +12,17 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        services.AddSlimMessageBus(mbb =>
+        services.AddLynx(builder =>
         {
-            mbb.WithProviderMemory();
-            mbb.Produce<AudioChunkMessage>(x => x.DefaultTopic("audio-chunks"));
-            mbb.Produce<TextMessage>(x => x.DefaultTopic("text-messages"));
-            mbb.Consume<AudioChunkMessage>(x => x
-                .Topic("audio-chunks")
-                .WithConsumer<SpeechToTextModule>());
-            mbb.Consume<TextMessage>(x => x
-                .Topic("text-messages")
-                .WithConsumer<RouterModule>());
+            builder.AddAudioCapture()
+                   .AddSpeechToText()
+                   .AddRouter()
+                   .AddSystemInfo();
         });
-
-        services.AddOptions<AudioSpeechSettings>()
-            .Bind(context.Configuration.GetSection(AudioSpeechSettings.SectionKey));
-        services.AddOptions<RouterSettings>()
-            .Bind(context.Configuration.GetSection(RouterSettings.SectionKey));
-
-        services.AddSingleton<AudioCaptureModule>()
-                .AddSingleton<SpeechToTextModule>()
-                .AddSingleton<RouterModule>()
-                .AddSingleton<SystemInfoModule>();
-
-        services.AddSingleton<ISimilarStringFinder, SimilarStringFinder>();
-
-        services.AddSingleton<FrameworkHost>();
     })
     .Build();
 
 var framework = host.Services.GetRequiredService<FrameworkHost>();
-framework.RegisterModule<AudioCaptureModule>();
-framework.RegisterModule<SpeechToTextModule>();
-framework.RegisterModule<RouterModule>();
-framework.RegisterModule<SystemInfoModule>();
 await framework.StartAsync();
 
 Console.ReadLine();

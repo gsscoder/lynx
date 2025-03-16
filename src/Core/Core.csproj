@@ -14,6 +14,7 @@
     <PackageReference Include="F23.StringSimilarity" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.3" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="SharpX" Version="8.3.0" />
     <PackageReference Include="SlimMessageBus" Version="3.0.0" />
