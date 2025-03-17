@@ -71,6 +71,8 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
             segments.Add(segment);
         }
 
+        _logger.LogInformation("Segments {SegmentCount}", segments.Count);
+
         foreach (var segment in segments) {
             var text = segment.Text.Trim().ToLowerInvariant();
             _logger.LogInformation("Heard: {Text}", text);
@@ -83,11 +85,12 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
             var blank = AudioUtility.IsBlank(text);
             lock (_audioBuffer) {
                 if (!_isListening) {
-                    if (blank || !text.Contains(_settings.ListenStartTrigger)) continue;
+                    if (blank || !_simStrFinder.FindSimilar(text, _settings.ListenStartTrigger).Any()) continue;
 
                     _isListening = true;
                     var firstText = _simStrFinder.ReplaceSimilar(text, _settings.ListenStartTrigger, "").Trim();
                     firstText = firstText.RemoveDiacritics();
+
                     if (firstText.Length > 0) _texts.Add(firstText);
                     _logger.LogInformation(">> Listening started");
                 }
@@ -98,11 +101,13 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                             _isListening = false;
                             _silence = 0;
                             _logger.LogInformation(">> Listening stopped");
+                            break;
                         }
                     }
                     else {
                         var inputText = _simStrFinder.ReplaceSimilar(text, _settings.ListenStartTrigger, "").Trim();
                         inputText = inputText.RemoveDiacritics();
+                    
                         if (inputText.Length > 0) _texts.Add(inputText);
                         _silence = 0;
                     }
