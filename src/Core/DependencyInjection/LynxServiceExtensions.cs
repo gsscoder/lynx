@@ -1,5 +1,5 @@
-﻿using Lynx.Core.Services;
-using Lynx.Core;
+﻿using Lynx.Core;
+using Lynx.Core.Services;
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
 
@@ -22,6 +22,7 @@ public static class LynxServiceExtensions
         services.AddSingleton<FrameworkHost>(sp =>
             new FrameworkHost(sp, builder.ModuleTypes));
         services.AddSingleton<ISimilarStringFinder, SimilarStringFinder>();
+        services.AddSingleton<AudioUtilityFactory>();
 
         return services;
     }

@@ -1,7 +1,7 @@
-﻿using Lynx.Core.Configuration;
-using Lynx.Core.Modules;
-using Lynx.Core;
+﻿using Lynx.Core;
+using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
+using Lynx.Core.Modules;
 using SlimMessageBus.Host;
 using System.Runtime.CompilerServices;
 
@@ -9,8 +9,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public interface ILynxBuilder
 {
-    ILynxBuilder AddAudioCapture();
-    ILynxBuilder AddSpeechToText();
+    ILynxBuilder AddWhisperSpeechToText();
     ILynxBuilder AddRouter();
     ILynxBuilder AddSystemInfo();
 }
@@ -23,24 +22,20 @@ internal class LynxBuilder : ILynxBuilder
 
     public LynxBuilder(IServiceCollection services) => _services = services;
 
-    public ILynxBuilder AddAudioCapture()
-    {
-        SmbConfigs.Add(mbb => mbb.Produce<AudioChunkMessage>(x => x.DefaultTopic("audio-chunks")));
-        _services.AddSingleton<AudioCaptureModule>();
-        RegisterModule<AudioCaptureModule>();
-        return this;
-    }
-
-    public ILynxBuilder AddSpeechToText()
+    public ILynxBuilder AddWhisperSpeechToText()
     {
         SmbConfigs.Add(mbb =>
         {
-            mbb.Consume<AudioChunkMessage>(x => x.Topic("audio-chunks").WithConsumer<SpeechToTextModule>());
+            mbb.Produce<AudioChunkMessage>(x => x.DefaultTopic("audio-chunks"));
+            mbb.Consume<AudioChunkMessage>(x => x.Topic("audio-chunks").WithConsumer<WhisperSTTModule>());
             mbb.Produce<TextMessage>(x => x.DefaultTopic("text-messages"));
         });
-        _services.AddOptions<AudioSpeechSettings>().BindConfiguration(AudioSpeechSettings.SectionKey);
-        _services.AddSingleton<SpeechToTextModule>();
-        RegisterModule<SpeechToTextModule>();
+        _services.AddOptions<WhishperSpeechSettings>().BindConfiguration(WhishperSpeechSettings.SectionKey);
+        _services.AddSingleton<NAudioCaptureModule>();
+        _services.AddSingleton<WhisperSTTModule>();
+        RegisterModule<WhisperSTTModule>();
+        RegisterModule<NAudioCaptureModule>();
+
         return this;
     }
 
@@ -50,6 +45,7 @@ internal class LynxBuilder : ILynxBuilder
         _services.AddOptions<RouterSettings>().BindConfiguration(RouterSettings.SectionKey);
         _services.AddSingleton<RouterModule>();
         RegisterModule<RouterModule>();
+
         return this;
     }
 
@@ -57,6 +53,7 @@ internal class LynxBuilder : ILynxBuilder
     {
         _services.AddSingleton<SystemInfoModule>();
         RegisterModule<SystemInfoModule>();
+
         return this;
     }
 

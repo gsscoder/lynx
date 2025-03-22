@@ -2,9 +2,9 @@
 
 namespace Lynx.Core.Configuration;
 
-public sealed class AudioSpeechSettings
+public sealed class WhishperSpeechSettings
 {
-    public const string SectionKey = "AudioSpeech";
+    public const string SectionKey = "Whishper";
 
     [Required(ErrorMessage = $"{nameof(BufferMs)} setting is mandatory")]
     [Range(10, 3000, ErrorMessage = $"{nameof(BufferMs)} setting must range from 10 to 3000")]

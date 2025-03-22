@@ -1,5 +1,5 @@
-﻿using Lynx.Core.Configuration;
-using Lynx.Core.Infastructure;
+﻿using Lynx.Core.Abstractions;
+using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
 using Microsoft.Extensions.Logging;
@@ -13,12 +13,15 @@ public class RouterModule : Module, IConsumer<TextMessage>
     private readonly ILogger _logger;
     private readonly ISimilarStringFinder _simStrFinder;
     private readonly IEnumerable<(string, string)> _bindings;
+    private readonly IAudioUtility _audioUtility;
 
     public RouterModule(ILogger<RouterModule> logger,
         IOptions<RouterSettings> settings,
+        AudioUtilityFactory audUtilFactory,
         ISimilarStringFinder simStrFinder)
     {
         _logger = logger;
+        _audioUtility = audUtilFactory.CreateAudioUtility();
         _simStrFinder = simStrFinder;
         _bindings = settings.Value.Bindings.SelectMany(b => b.Commands.Select(t => (t, b.Module)));
     }
@@ -34,7 +37,7 @@ public class RouterModule : Module, IConsumer<TextMessage>
     {
         _logger.LogInformation($"Text: {message.Text}");
 
-        if (AudioUtility.IsBlank(message.Text)) return;
+        if (_audioUtility.IsBlank(message.Text)) return;
 
         foreach (var binding in _bindings) {
             if (_simStrFinder.FindSimilar(binding.Item1, message.Text).Any()) {

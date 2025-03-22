@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace Lynx.Core.Modules;
 
-public sealed class AudioCaptureModule : Module
+public sealed class NAudioCaptureModule : Module
 {
     private readonly ILogger _logger;
     private readonly IMessageBus _bus;
@@ -15,11 +15,11 @@ public sealed class AudioCaptureModule : Module
     private CancellationTokenSource? _cts;
     private int _started;
 
-    public override string Name => "AudioCapture";
+    public override string Name => "NAudioCapture";
     public override bool AutoStart => true; 
 
-    public AudioCaptureModule(ILogger<AudioCaptureModule> logger,
-        IOptions<AudioSpeechSettings> options,
+    public NAudioCaptureModule(ILogger<NAudioCaptureModule> logger,
+        IOptions<WhishperSpeechSettings> options,
         IMessageBus bus)
     {
         _logger = logger;

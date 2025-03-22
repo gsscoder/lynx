@@ -1,5 +1,5 @@
-﻿using Lynx.Core.Configuration;
-using Lynx.Core.Infastructure;
+﻿using Lynx.Core.Abstractions;
+using Lynx.Core.Configuration;
 using Lynx.Core.Messages;
 using Lynx.Core.Services;
 using Microsoft.Extensions.Logging;
@@ -11,10 +11,11 @@ using Whisper.net;
 
 namespace Lynx.Core.Modules;
 
-public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
+public sealed class WhisperSTTModule : Module, IConsumer<AudioChunkMessage>
 {
-    private readonly ILogger<SpeechToTextModule> _logger;
-    private readonly AudioSpeechSettings _settings;
+    private readonly ILogger<WhisperSTTModule> _logger;
+    private readonly WhishperSpeechSettings _settings;
+    private readonly IAudioUtility _audioUtility;
     private readonly ISimilarStringFinder _simStrFinder;
     private readonly IMessageBus _bus;
     private readonly WhisperProcessor _processor;
@@ -23,17 +24,19 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
     private int _silence = 0;
     private readonly List<string> _texts = [];
 
-    public override string Name => "SpeechToText";
+    public override string Name => "WhisperSpeechToText";
     public override bool AutoStart => true;
 
-    public SpeechToTextModule(ILogger<SpeechToTextModule> logger,
-        IOptions<AudioSpeechSettings> options,
+    public WhisperSTTModule(ILogger<WhisperSTTModule> logger,
+        IOptions<WhishperSpeechSettings> options,
         IMessageBus bus,
+        AudioUtilityFactory audUtilFactor,
         ISimilarStringFinder simStringFinder)
     {
         _logger = logger;
         _settings = options.Value;
         _bus = bus;
+        _audioUtility = audUtilFactor.CreateAudioUtility();
         _simStrFinder = simStringFinder;
         var factory = WhisperFactory.FromPath(_settings.ModelPath);
         _processor = factory.CreateBuilder()
@@ -82,7 +85,7 @@ public sealed class SpeechToTextModule : Module, IConsumer<AudioChunkMessage>
                 continue;
             }
 
-            var blank = AudioUtility.IsBlank(text);
+            var blank = _audioUtility.IsBlank(text);
             lock (_audioBuffer) {
                 if (!_isListening) {
                     if (blank || !_simStrFinder.FindSimilar(text, _settings.ListenStartTrigger).Any()) continue;

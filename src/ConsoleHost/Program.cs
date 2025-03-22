@@ -25,8 +25,7 @@ var host = Host.CreateDefaultBuilder(args)
     {
         services.AddLynx(builder =>
         {
-            builder.AddAudioCapture()
-                   .AddSpeechToText()
+            builder.AddWhisperSpeechToText()
                    .AddRouter()
                    .AddSystemInfo();
         });
